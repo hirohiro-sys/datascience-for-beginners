@@ -5,10 +5,5 @@
 
 ### テーマ
 タイタニック号の生存者を予測するモデル
-```
+
 https://www.kaggle.com/competitions/titanic
-```
-
-### 環境設定
-
-### 提出
