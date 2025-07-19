@@ -153,10 +153,65 @@ from sklearn.tree import DecisionTreeClassifier
 model = DecisionTreeClassifier(random_state=42)
 model.fit(x_train,y_train)
 
-
 """
 6. モデルの評価
 """
 
 
+# モデルの評価手順(ホールドアウト法 -> 学習データでモデルを訓練し、テストデータで性能を評価する)
+# 1 学習データを学習用と評価用に分割
+# 2 分割後の学習用データだけを使ってモデルを作成
+# 3 分割後の評価用データを使ってモデルを作成
 
+from sklearn.model_selection import train_test_split
+
+# trが学習データ、vaがテストデータ
+x_tr, x_va, y_tr, y_va = train_test_split(x_train,y_train, test_size=0.2, random_state=42)
+print("学習",x_tr.shape,y_tr.shape)
+print("評価",x_va.shape,y_va.shape)
+
+# 学習用と評価用のデータで目的変数(Survived)に含まれる0と1の割合が違うので、性能を上げるため割合を揃えたい
+y_tr.value_counts()
+y_va.value_counts()
+x_tr, x_va, y_tr, y_va = train_test_split(
+    x_train,
+    y_train,
+    test_size=0.2,
+    stratify=y_train, # ここで層化することで目的変数の割合を同じにしている
+    random_state=42
+)
+# これで大体同じ割合になっていることを確認(0の割合 / (0の割合 + 1の割合))
+y_tr.value_counts()
+y_va.value_counts()
+
+# 学習データでモデルを学習
+model.fit(x_tr,y_tr)
+
+# 学習・テストデータで性能を予測
+y_tr_pred = model.predict(x_tr)
+y_va_pred = model.predict(x_va)
+y_va_pred[:5]
+y_va[:5].values
+
+from sklearn.metrics import accuracy_score
+
+# 基本はテストデータが改善されるようにしていく
+print("テストデータの正解率:",accuracy_score(y_va,y_va_pred))  # -> 0.7932960893854749
+print("学習用データの正解率:",accuracy_score(y_tr,y_tr_pred))  # -> 0.9058988764044944
+
+# 最後にテストデータでモデルの予測をする
+test.head()
+x_test = test.drop(columns=["PassengerId"])
+y_test_pred = model.predict(x_test)
+y_test_pred[:5]
+
+# テストデータにモデルの予測値を反映
+test["Survived"] = y_test_pred
+test.head()
+
+submit_df = test[["PassengerId", "Survived"]].set_index("PassengerId")
+submit_df = submit_df["Survived"].astype(int)
+submit_df.head()
+
+# kaggleにアップロードして最終的なモデル評価するためにcsvにする
+submit_df.to_csv("submit.csv")
